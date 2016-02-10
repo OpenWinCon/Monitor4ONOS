@@ -43,7 +43,7 @@ public class AppUiComponent {
 
     // List of application views
     private final List<UiView> uiViews = ImmutableList.of(
-            new UiView(UiView.Category.OTHER, "sample", "Sample")
+            new UiView(UiView.Category.OTHER, "Monitor", "Monitor")
     );
 
     // Factory for UI message handlers
@@ -61,13 +61,13 @@ public class AppUiComponent {
     @Activate
     protected void activate() {
         uiExtensionService.register(extension);
-        log.info("Started");
+        log.info("[AppUiComponent]  Started");
     }
 
     @Deactivate
     protected void deactivate() {
         uiExtensionService.unregister(extension);
-        log.info("Stopped");
+        log.info("[AppUiComponent]  Stopped");
     }
 
 }

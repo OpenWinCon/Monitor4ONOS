@@ -119,6 +119,8 @@ public class AppUiMessageHandler extends UiMessageHandler {
             // fake data for demonstration purposes...
             Item item = getItem(id);
 
+
+
             ObjectNode rootNode = MAPPER.createObjectNode();
             ObjectNode data = MAPPER.createObjectNode();
             rootNode.set(DETAILS, data);
@@ -161,9 +163,9 @@ public class AppUiMessageHandler extends UiMessageHandler {
     // Produce a list of items.
     private static List<Item> getItems() {
         List<Item> items = new ArrayList<>();
-        items.add(new Item("item-1", "foo", 42));
-        items.add(new Item("item-2", "bar", 99));
-        items.add(new Item("item-3", "baz", 65));
+        items.add(new Item("item-1", "CPU", 42));
+        items.add(new Item("item-2", "Memory", 99));
+        items.add(new Item("item-3", "Traffic", 65));
         return items;
     }
 

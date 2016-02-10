@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-  ~ Copyright 2014 Open Networking Laboratory
+  ~ Copyright 2015 Open Networking Laboratory
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -13,18 +14,11 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
-
-    <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
-        <command>
-            <action class="org.onosproject.EvacuateCommand"/>
-        </command>
-        <command>
-            <action class="org.onosproject.RollbackCommand"/>
-        </command>
-        <command>
-            <action class="org.onosproject.ControllerMonitorCommand"/>
-        </command>
-    </command-bundle>
-
-</blueprint>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0" name="monitor4onos-1.0-SNAPSHOT">
+    <repository>mvn:org.onosproject/monitor4onos/1.0-SNAPSHOT/xml/features</repository>
+    <feature name="monitor4onos" version="1.0-SNAPSHOT"
+             description="Monitoring Tool for ONOS Control Plane">
+        <feature>onos-api</feature>
+        <bundle>mvn:org.onosproject/monitor4onos/1.0-SNAPSHOT</bundle>
+    </feature>
+</features>

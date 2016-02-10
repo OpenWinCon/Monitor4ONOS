@@ -48,9 +48,13 @@ import org.onosproject.cluster.NodeId;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.mastership.MastershipAdminService;
+import org.onosproject.mastership.MastershipService;
 import org.onosproject.net.Device;
 import org.onosproject.net.DeviceId;
+import org.onosproject.net.MastershipRole;
 import org.onosproject.net.device.DeviceService;
+import org.onosproject.net.driver.DriverHandler;
+import org.onosproject.net.driver.DriverService;
 import org.onosproject.net.flow.FlowEntry;
 import org.onosproject.net.flow.FlowRuleService;
 import org.onosproject.net.flow.FlowEntry.FlowEntryState;
@@ -63,6 +67,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -86,13 +91,18 @@ public class EvacuateCommand extends AbstractShellCommand {
 
     private final ClusterEventListener clusterEventListener = new InternalClusterListener();
 
+
     protected CoreService coreService;
     protected DeviceService deviceService;
     protected MastershipAdminService mastershipAdminService;
     protected ClusterService clusterService;
+    protected MastershipService mastershipService;
+
+    private EvacueeDevices evacueeDevices = EvacueeDevices.getSingletonEvacueeDeviceList();
 
 
-    @Argument(index = 0, name = "node", description = "node ID", required = true, multiValued = false)
+
+    @Argument(index = 0, name = "node", description = "Node ID", required = true, multiValued = false)
     String node = null;
 
     //@Argument(index = 1, name = "state", description = "Flow Rule State", required = false, multiValued = false)
@@ -107,12 +117,27 @@ public class EvacuateCommand extends AbstractShellCommand {
         deviceService = get(DeviceService.class);
         mastershipAdminService = get(MastershipAdminService.class);
         clusterService = get(ClusterService.class);
+        mastershipService = get(MastershipService.class);
 
-        Iterator<Device> iter = deviceService.getAvailableDevices().iterator();
+        NodeId targetNodeId = new NodeId(node);
 
-        while(iter.hasNext()) {
-            iter.next().id();
+        Set<DeviceId> targetDevices = mastershipService.getDevicesOf(targetNodeId);
+
+        for(DeviceId d : targetDevices) {
+            mastershipAdminService.setRole(targetNodeId, d, MastershipRole.STANDBY);
+//            print(d.uri().toString());
         }
+
+        evacueeDevices.setRollBackNodeId(targetNodeId);
+        evacueeDevices.setDevices(targetDevices);
+
+//        while(iter.hasNext()) {
+//            DeviceId tempId = iter.next().id();
+//            List<DeviceId> deviceIdList = evacueeDevices.getDeviceList();
+//            deviceIdList.add(tempId);
+//            print(mastershipService.getLocalRole(tempId).toString());
+//
+//        }
 
 
 
@@ -136,14 +161,6 @@ public class EvacuateCommand extends AbstractShellCommand {
 
 
         print("test");
-
-        Runtime runtime = Runtime.getRuntime();
-
-        print("Total Memory : " + runtime.totalMemory());
-        print("Free Memmory : " + runtime.freeMemory());
-        print("Max Memory : " + runtime.maxMemory());
-
-
 
 
         print(deviceService.getRole(DeviceId.deviceId("of:0000000000000001")).name());
@@ -259,69 +276,73 @@ public class EvacuateCommand extends AbstractShellCommand {
     }
 
 
-//    private void printMetric(String name, Metric metric) {
-//        final String heading;
-//
-//        if (metric instanceof Counter) {
+
+    /*
+    private void printMetric(String name, Metric metric) {
+        final String heading;
+
+        if (metric instanceof Counter) {
 //            heading = format("-- %s : [%s] --", name, "Counter");
 //            print(heading);
-//            Counter counter = (Counter) metric;
-//            print("          count = %d", counter.getCount());
-//
-//        } else if (metric instanceof Gauge) {
+            Counter counter = (Counter) metric;
+            print("          count = %d", counter.getCount());
+
+        } else if (metric instanceof Gauge) {
 //            heading = format("-- %s : [%s] --", name, "Gauge");
 //            print(heading);
-//            @SuppressWarnings("rawtypes")
-//            Gauge gauge = (Gauge) metric;
-//            final Object value = gauge.getValue();
-//            if (name.endsWith("EpochMs") && value instanceof Long) {
+            @SuppressWarnings("rawtypes")
+            Gauge gauge = (Gauge) metric;
+            final Object value = gauge.getValue();
+            if (name.endsWith("EpochMs") && value instanceof Long) {
 //                print("          value = %s (%s)", value, new LocalDateTime(value));
-//            } else {
-//                print("          value = %s", value);
-//            }
-//
-//        } else if (metric instanceof Histogram) {
+            } else {
+                print("          value = %s", value);
+            }
+
+        } else if (metric instanceof Histogram) {
 //            heading = format("-- %s : [%s] --", name, "Histogram");
 //            print(heading);
-//            final Histogram histogram = (Histogram) metric;
-//            final Snapshot snapshot = histogram.getSnapshot();
-//            print("          count = %d", histogram.getCount());
-//            print("            min = %d", snapshot.getMin());
-//            print("            max = %d", snapshot.getMax());
-//            print("           mean = %f", snapshot.getMean());
-//            print("         stddev = %f", snapshot.getStdDev());
-//
-//        } else if (metric instanceof Meter) {
+            final Histogram histogram = (Histogram) metric;
+            final Snapshot snapshot = histogram.getSnapshot();
+            print("          count = %d", histogram.getCount());
+            print("            min = %d", snapshot.getMin());
+            print("            max = %d", snapshot.getMax());
+            print("           mean = %f", snapshot.getMean());
+            print("         stddev = %f", snapshot.getStdDev());
+
+        } else if (metric instanceof Meter) {
 //            heading = format("-- %s : [%s] --", name, "Meter");
 //            print(heading);
-//            final Meter meter = (Meter) metric;
-//            print("          count = %d", meter.getCount());
-//            print("      mean rate = %f", meter.getMeanRate());
-//            print("  1-minute rate = %f", meter.getOneMinuteRate());
-//            print("  5-minute rate = %f", meter.getFiveMinuteRate());
-//            print(" 15-minute rate = %f", meter.getFifteenMinuteRate());
-//
-//        } else if (metric instanceof Timer) {
+            final Meter meter = (Meter) metric;
+            print("          count = %d", meter.getCount());
+            print("      mean rate = %f", meter.getMeanRate());
+            print("  1-minute rate = %f", meter.getOneMinuteRate());
+            print("  5-minute rate = %f", meter.getFiveMinuteRate());
+            print(" 15-minute rate = %f", meter.getFifteenMinuteRate());
+
+        } else if (metric instanceof Timer) {
 //            heading = format("-- %s : [%s] --", name, "Timer");
 //            print(heading);
-//            final Timer timer = (Timer) metric;
-//            final Snapshot snapshot = timer.getSnapshot();
-//            print("          count = %d", timer.getCount());
-//            print("      mean rate = %f per second", timer.getMeanRate());
-//            print("  1-minute rate = %f per second", timer.getOneMinuteRate());
-//            print("  5-minute rate = %f per second", timer.getFiveMinuteRate());
-//            print(" 15-minute rate = %f per second", timer.getFifteenMinuteRate());
-//            print("            min = %f ms", nanoToMs(snapshot.getMin()));
-//            print("            max = %f ms", nanoToMs(snapshot.getMax()));
-//            print("           mean = %f ms", nanoToMs(snapshot.getMean()));
-//            print("         stddev = %f ms", nanoToMs(snapshot.getStdDev()));
-//        } else {
+            final Timer timer = (Timer) metric;
+            final Snapshot snapshot = timer.getSnapshot();
+            print("          count = %d", timer.getCount());
+            print("      mean rate = %f per second", timer.getMeanRate());
+            print("  1-minute rate = %f per second", timer.getOneMinuteRate());
+            print("  5-minute rate = %f per second", timer.getFiveMinuteRate());
+            print(" 15-minute rate = %f per second", timer.getFifteenMinuteRate());
+            print("            min = %f ms", nanoToMs(snapshot.getMin()));
+            print("            max = %f ms", nanoToMs(snapshot.getMax()));
+            print("           mean = %f ms", nanoToMs(snapshot.getMean()));
+            print("         stddev = %f ms", nanoToMs(snapshot.getStdDev()));
+        } else {
 //            heading = format("-- %s : [%s] --", name, metric.getClass().getCanonicalName());
 //            print(heading);
-//            print("Unknown Metric type:{}", metric.getClass().getCanonicalName());
-//        }
+            print("Unknown Metric type:{}", metric.getClass().getCanonicalName());
+        }
 //        print(Strings.repeat("-", heading.length()));
-//    }
+    }
+
+    */
 
     @SuppressWarnings("rawtypes")
     private TreeMultimap<String, Metric> listMetrics(MetricsService metricsService, MetricFilter filter) {

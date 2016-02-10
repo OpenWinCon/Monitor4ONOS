@@ -17,57 +17,36 @@ package org.onosproject;
 
 import org.apache.karaf.shell.commands.Command;
 import org.onosproject.cli.AbstractShellCommand;
-import org.onosproject.cluster.ClusterEvent;
-import org.onosproject.cluster.ClusterEventListener;
-import org.onosproject.cluster.ClusterService;
-import org.onosproject.cluster.NodeId;
-import org.onosproject.core.ApplicationId;
-import org.onosproject.core.CoreService;
-import org.onosproject.mastership.MastershipAdminService;
-import org.onosproject.net.DeviceId;
-import org.onosproject.net.MastershipRole;
-import org.onosproject.net.device.DeviceService;
 
-import static com.google.common.collect.Lists.newArrayList;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
 
 
 /**
  * Sample Apache Karaf CLI command
  */
-@Command(scope = "onos", name = "rollback",
-         description = "Roll back devices")
+@Command(scope = "onos", name = "controller-monitor",
+         description = "Monitoring controller's CPU load and Memory laod")
 public class ControllerMonitorCommand extends AbstractShellCommand {
-
-
-    private ApplicationId appId;
-
-    private final ClusterEventListener clusterEventListener = new InternalClusterListener();
-
-    protected CoreService coreService;
-    protected DeviceService deviceService;
-    protected MastershipAdminService mastershipAdminService;
-    protected ClusterService clusterService;
-
-    private EvacueeDevices evacueeDevices = EvacueeDevices.getSingletonEvacueeDeviceList();
 
 
 
     @Override
     protected void execute() {
-        coreService = get(CoreService.class);
-        deviceService = get(DeviceService.class);
-        mastershipAdminService = get(MastershipAdminService.class);
-        clusterService = get(ClusterService.class);
 
-        NodeId targetNodeId = evacueeDevices.getRollBackNodeId();
+        OperatingSystemMXBean osMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        Runtime runtime = Runtime.getRuntime();
 
-        for(DeviceId d : evacueeDevices.getDevices()) {
-            mastershipAdminService.setRole(targetNodeId, d, MastershipRole.MASTER);
-        }
+        print("CPU usage    : " + osMXBean.getSystemLoadAverage()*100 + " percent");
+        print("Max memory   : %.3f MB", (double)runtime.maxMemory() / (1024* 1024));
+        print("Total memory : %.3f MB", (double)runtime.totalMemory() / (1024*1024));
+        print("Used memory  : %.3f MB", (double)(runtime.totalMemory() - runtime.freeMemory()) / (1024*1024));
 
+//        print("Max memory   : " + (double)runtime.maxMemory() / (1024* 1024) + "MB");
+//        print("Total memory : " + (double)runtime.totalMemory() / (1024*1024) + "MB");
+//        print("Used memory  : " + (double)(runtime.totalMemory() - runtime.freeMemory()) / (1024*1024) + "MB");
 
-
-        print("test");
 
         log.info("test");
 
@@ -77,24 +56,4 @@ public class ControllerMonitorCommand extends AbstractShellCommand {
 
 
 
-    private class InternalClusterListener implements ClusterEventListener {
-        @Override
-        public void event(ClusterEvent clusterEvent) {
-            log.info("[test-version]Cluster Event" + clusterEvent.type().toString());
-            switch (clusterEvent.type()) {
-                case INSTANCE_ADDED:
-                    log.info("[test-version] INSTANCE_ADDED");
-                    break;
-                case INSTANCE_REMOVED:
-                    log.info("[test-version] INSTANCE_REMOVED");
-                    break;
-                case INSTANCE_ACTIVATED:
-                    log.info("[test-version] INSTANCE_ACTIVATED");
-                    break;
-                case INSTANCE_DEACTIVATED:
-                    log.info("[test-version] INSTANCE_DEACTIVATED");
-                    break;
-            }
-        }
-    }
 }
